@@ -1,0 +1,57 @@
+version: '1'
+services:
+  redis:
+    image: redis:4.0.1
+    container_name: redis-label
+    volumes:
+      - /apps/redis/datadir:/data
+      - /apps/redis/conf/redis.conf:/usr/local/etc/redis/redis.conf
+      - /apps/redis/logs:/logs
+    command: redis-server --requirepass 123456
+    ports:
+      - 6379:6379
+  mysql:
+    environment:
+        MYSQL_ROOT_PASSWORD: "mysql114514"
+        MYSQL_USER: 'test'
+        MYSQL_PASS: 'yourpassword'
+    image: "mysql:5.5"
+    restart: always
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+        - "./db:/var/lib/mysql"
+        - "./my.cnf:/etc/my.cnf"
+        - "./init/:/docker-entrypoint-initdb.d/"
+    ports:
+        - "3306:3306"
+  spider:
+    image: crescent12138/spider:2.0
+    restart: always
+    container_name: spider_mao
+    ports:
+      - 8848:1234
+    links:
+      - redis
+      - mysql
+    depends_on:
+      - redis
+      - mysql
+  board-mao:
+    image: crescent12138/xcpc_board:latest
+    container_name: board_mao
+    ports:
+      - 8080:8080
+    
+  board-EF:
+    image: acidmango/xcpcboard:1.0
+    container_name: board_lqy
+    ports:
+      - 8812:80
+    links:
+      - board-mao
+    depends_on:
+      - board-mao
+    
